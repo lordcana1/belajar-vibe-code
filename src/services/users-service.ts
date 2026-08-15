@@ -1,6 +1,13 @@
 import { eq } from "drizzle-orm";
 import { db, users, userTokens } from "../db";
 
+export interface CurrentUser {
+  id: number;
+  name: string;
+  email: string;
+  createdAt: Date;
+}
+
 export interface RegisterUserInput {
   name: string;
   email: string;
@@ -72,4 +79,26 @@ export async function loginUser(input: LoginUserInput): Promise<string> {
   });
 
   return token;
+}
+
+export async function getUserByToken(token: string): Promise<CurrentUser> {
+  // 1. Join user_tokens with users to find user by token
+  const result = await db
+    .select({
+      id: users.id,
+      name: users.name,
+      email: users.email,
+      createdAt: users.createdAt,
+    })
+    .from(userTokens)
+    .innerJoin(users, eq(userTokens.userId, users.id))
+    .where(eq(userTokens.token, token))
+    .limit(1);
+
+  const user = result[0];
+  if (!user) {
+    throw new Error("Unauthorized");
+  }
+
+  return user;
 }
