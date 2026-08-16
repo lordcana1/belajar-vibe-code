@@ -102,3 +102,19 @@ export async function getUserByToken(token: string): Promise<CurrentUser> {
 
   return user;
 }
+
+export async function logoutUser(token: string): Promise<void> {
+  // 1. Check if token exists
+  const tokenExists = await db
+    .select()
+    .from(userTokens)
+    .where(eq(userTokens.token, token))
+    .limit(1);
+
+  if (tokenExists.length === 0) {
+    throw new Error("Unauthorized");
+  }
+
+  // 2. Delete the token
+  await db.delete(userTokens).where(eq(userTokens.token, token));
+}
