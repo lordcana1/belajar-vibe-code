@@ -2,7 +2,12 @@ import { drizzle } from "drizzle-orm/mysql2";
 import mysql from "mysql2/promise";
 import * as schema from "./schema";
 
-const connectionUri = process.env.DATABASE_URL || "mysql://root:password@localhost:3306/belajar_vibe_code";
+const connectionUri = process.env.DATABASE_URL;
+
+if (!connectionUri) {
+  console.error("DATABASE_URL environment variable is not set");
+  process.exit(1);
+}
 
 // Create connection pool for MySQL
 export const pool = mysql.createPool(connectionUri);

@@ -1,5 +1,5 @@
 import { Elysia, t } from "elysia";
-import { registerUser, loginUser, getUserByToken } from "../services/users-service";
+import { registerUser, loginUser, getUserByToken, logoutUser } from "../services/users-service";
 
 export const usersRoute = new Elysia({ prefix: "/api/users" })
   .post(
@@ -60,6 +60,35 @@ export const usersRoute = new Elysia({ prefix: "/api/users" })
         email: t.String({ format: "email", error: "Format email tidak valid" }),
         password: t.String({ minLength: 1, error: "Password harus diisi" }),
       }),
+    }
+  )
+  .delete(
+    "/logout",
+    async ({ headers, set }) => {
+      try {
+        // 1. Validate Authorization header
+        const authorization = headers["authorization"];
+        if (!authorization || !authorization.startsWith("Bearer ")) {
+          set.status = 401;
+          return { error: "Unauthorized" };
+        }
+
+        // 2. Extract token from "Bearer <token>"
+        const token = authorization.substring(7).trim();
+        if (!token) {
+          set.status = 401;
+          return { error: "Unauthorized" };
+        }
+
+        // 3. Perform logout
+        await logoutUser(token);
+
+        set.status = 200;
+        return { data: "OK" };
+      } catch (error) {
+        set.status = 401;
+        return { error: "Unauthorized" };
+      }
     }
   )
   .get(
